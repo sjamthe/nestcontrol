@@ -5,9 +5,7 @@ import calendar
 import json
 import os
 import requests
-import sys
 import time
-import urllib
 
 
 urls = {'login': 'https://home.nest.com/user/login',
@@ -15,6 +13,7 @@ urls = {'login': 'https://home.nest.com/user/login',
 tokendir = '%s/.cache/nestcontrol' % os.environ['HOME']
 tokenfile = 'token'
 tokenpath = '%s/%s' % (tokendir, tokenfile)
+
 
 def cel_to_fahr(celsius):
     return celsius * 1.8 + 32.0
@@ -36,17 +35,19 @@ def auth_url(auth, url):
     return "%s%s.%s" % (auth['url'], url, auth['userid'])
 
 
+def auth_headers(auth):
+    return {'Authorization': 'Basic %s' % auth['token'],
+            'X-nl-user-id': auth['userid'],
+            'X-nl-protocol-version': '1'}
+
+
 def auth_nest_post(session, auth, url, data):
-    headers = {'Authorization':'Basic ' + auth['token'],
-               'X-nl-user-id': auth['userid'],
-               'X-nl-protocol-version': '1'}
+    headers = auth_headers(auth)
     return nest_post(session, auth_url(auth, url), data, headers)
 
 
 def auth_nest_get(session, auth, url, data=None):
-    headers = {'Authorization':'Basic ' + auth['token'],
-               'X-nl-user-id': auth['userid'],
-               'X-nl-protocol-version': '1'}
+    headers = auth_headers(auth)
     return nest_get(session, auth_url(auth, url), data, headers)
 
 
