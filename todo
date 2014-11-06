@@ -1,7 +1,5 @@
 Basics:
 
-Mode set and target set
-Handle range (auto) with two setpoints - set
 .nestrc for auth details (it's gonna be plaintext somewhere, unfortunately)
 Handle request failure by attempting to login again (especially important if used a cached token)
 Make OO
