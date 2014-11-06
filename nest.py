@@ -6,6 +6,10 @@ import requests
 import urllib
 
 
+urls = {'login': 'https://home.nest.com/user/login',
+        'status': '/v2/mobile/user'}
+
+
 def cel_to_fahr(celsius):
     return celsius * 1.8 + 32.0
 
@@ -14,10 +18,35 @@ def fahr_to_cel(fahrenheit):
     return (fahrenheit - 32.0) / 1.8
 
 
+def nest_post(session, url, data, headers=None):
+    return session.post(url, headers=headers, data=data)
+
+
+def nest_get(session, url, data, headers=None):
+    return session.get(url, headers=headers, data=data)
+
+
+def auth_url(auth, url):
+    return "%s%s.%s" % (auth['url'], url, auth['userid'])
+
+
+def auth_nest_post(session, auth, url, data):
+    headers = {'Authorization':'Basic ' + auth['token'],
+               'X-nl-user-id': auth['userid'],
+               'X-nl-protocol-version': '1'}
+    return nest_post(session, auth_url(auth, url), data, headers)
+
+
+def auth_nest_get(session, auth, url, data=None):
+    headers = {'Authorization':'Basic ' + auth['token'],
+               'X-nl-user-id': auth['userid'],
+               'X-nl-protocol-version': '1'}
+    return nest_get(session, auth_url(auth, url), data, headers)
+
+
 def login(session, username, password):
     payload = {'username': args.username, 'password': args.password}
-    headers = {'user-agent': 'Nest/1.1.0.10 CFNetwork/548.0.4'}
-    r = s.post('https://home.nest.com/user/login', data=payload, headers=headers)
+    r = nest_post(session, urls['login'], payload)
     #print r.status_code
     #print r.headers
 
@@ -29,18 +58,14 @@ def login(session, username, password):
     auth['token'] = data['access_token']
     auth['userid'] = data['userid']
 
-    #print url
-    #print token
-    #print userid
+    #print auth['url']
+    #print auth['token']
+    #print auth['userid']
     return auth
 
 
 def get_status(session, auth):
-    headers = {'user-agent':'Nest/1.1.0.10 CFNetwork/548.0.4',
-               'Authorization':'Basic ' + auth['token'],
-               'X-nl-user-id': auth['userid'],
-               'X-nl-protocol-version': '1'}
-    r = s.get(auth['url'] + '/v2/mobile/user.' + auth['userid'], headers=headers)
+    r = auth_nest_get(session, auth, urls['status'])
     #print r.status_code
     #print r.headers
 
@@ -55,11 +80,11 @@ if __name__ == '__main__':
     argparser.add_argument('-s', '--serial', help='Nest serial number (Default: first nest found)')
     args = argparser.parse_args()
 
-    s = requests.Session()
+    session = requests.Session()
 
-    auth = login(s, args.username, args.password)
+    auth = login(session, args.username, args.password)
 
-    data = get_status(s, auth)
+    data = get_status(session, auth)
 
     if args.serial is None:
         for structure in data['structure']:
