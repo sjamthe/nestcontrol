@@ -147,7 +147,12 @@ if __name__ == '__main__':
 
     temp = cel_to_fahr(data['shared'][serial]['current_temperature'])
     humidity = data['device'][serial]['current_humidity']
-    setpt = cel_to_fahr(data['shared'][serial]['target_temperature'])
     mode = data['shared'][serial]['target_temperature_type']
 
-    print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setpt, mode)
+    if mode != 'range':
+        setpt = cel_to_fahr(data['shared'][serial]['target_temperature'])
+        print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setpt, mode)
+    else:
+        setptlow = cel_to_fahr(data['shared'][serial]['target_temperature_low'])
+        setpthigh = cel_to_fahr(data['shared'][serial]['target_temperature_high'])
+        print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F - %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setptlow, setpthigh, mode)
