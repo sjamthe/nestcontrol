@@ -1,14 +1,20 @@
 #!/usr/bin/env python2.7
 
 import argparse
+import calendar
 import json
+import os
 import requests
+import sys
+import time
 import urllib
 
 
 urls = {'login': 'https://home.nest.com/user/login',
         'status': '/v2/mobile/user'}
-
+tokendir = '%s/.cache/nestcontrol' % os.environ['HOME']
+tokenfile = 'token'
+tokenpath = '%s/%s' % (tokendir, tokenfile)
 
 def cel_to_fahr(celsius):
     return celsius * 1.8 + 32.0
@@ -45,6 +51,13 @@ def auth_nest_get(session, auth, url, data=None):
 
 
 def login(session, username, password):
+    if os.path.isfile(tokenpath):
+        authfile = open(tokenpath, 'r')
+        auth = json.load(authfile)
+        ts = calendar.timegm(time.strptime(auth['expires'], '%a, %d-%b-%Y %H:%M:%S %Z'))
+        if time.time() < ts:
+            return auth
+
     payload = {'username': args.username, 'password': args.password}
     r = nest_post(session, urls['login'], payload)
     #print r.status_code
@@ -57,10 +70,22 @@ def login(session, username, password):
     auth['url'] = data['urls']['transport_url']
     auth['token'] = data['access_token']
     auth['userid'] = data['userid']
+    auth['expires'] = data['expires_in']
 
     #print auth['url']
     #print auth['token']
     #print auth['userid']
+    #print auth['expires']
+
+    path = ''
+    for dir in tokendir.split('/'):
+        path += '%s/' % dir
+        if not os.path.isdir(path):
+            os.mkdir(path, 0700)
+
+    authfile = open(tokenpath, 'w')
+    json.dump(auth, authfile)
+
     return auth
 
 

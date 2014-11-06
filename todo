@@ -1,3 +1,3 @@
-Cache auth tokens (looks like they are good for 30 days or so) -  example - 'expires_in': 'Sat, 06-Dec-2014 17:36:30 GMT'
+Handle request failure by attempting to login again (especially important if used a cached token)
 .nestrc for auth details (it's gonna be plaintext somewhere, unfortunately)
 Mode set and target set
