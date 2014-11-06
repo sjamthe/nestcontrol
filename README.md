@@ -10,6 +10,7 @@ Status
 * Sets hvac mode - off, heat, cool, range (aka auto)
 * Sets temperature set point (or high/low for range/auto mode)
 * Caches user authentication token to ~/.cache/nestcontrol/token
+* Dump full and basic status as json
 
 Usage
 =====

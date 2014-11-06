@@ -193,6 +193,8 @@ if __name__ == '__main__':
     argparser.add_argument('-u', '--username', required=True, help='Nest username.')
     argparser.add_argument('-p', '--password', required=True, help='Nest password.')
     argparser.add_argument('-s', '--serial', help='Nest serial number (Default: first nest found).')
+    argparser.add_argument('-f', '--fulljson', action='store_true', default=False, help='Output entire status as json (Default: False).')
+    argparser.add_argument('-j', '--json', action='store_true', default=False, help='Output basic info as json (Default: False).')
     argparser.add_argument('-d', '--debug', type=int, default=0, help='Debug level. Higher is more (Default: 0).')
     argparser.add_argument('command', nargs='*', help='commands - off, heat, cool, auto, or a set temperature in Fahrenheit. For example, to turn hvac off, use the command "off", or to turn on heat and set the temperature, "heat 72", or to just set the temperature "68". For auto, specify a temperature range (such as "68-72"). Commands are executed in the order provided, and note: don\'t enter the quotes.')
 
@@ -215,17 +217,30 @@ if __name__ == '__main__':
     for command in args.command:
         do_command(session, auth, command, serial)
 
+    # If we executed a command, update the status
     if len(args.command) > 0:
         data = get_status(session, auth)
 
     temp = cel_to_fahr(data['shared'][serial]['current_temperature'])
     humidity = data['device'][serial]['current_humidity']
     mode = data['shared'][serial]['target_temperature_type']
+    setpt = cel_to_fahr(data['shared'][serial]['target_temperature'])
+    setptlow = cel_to_fahr(data['shared'][serial]['target_temperature_low'])
+    setpthigh = cel_to_fahr(data['shared'][serial]['target_temperature_high'])
 
-    if mode != 'range':
-        setpt = cel_to_fahr(data['shared'][serial]['target_temperature'])
-        print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setpt, mode)
+    if args.fulljson:
+        print json.dumps(data, indent=2)
+    elif args.json:
+        result = dict()
+        result['temp'] = float('%.1f' % temp)
+        result['humidity'] = humidity
+        result['setpt'] = float('%.1f' % setpt)
+        result['setptlow'] = float('%.1f' % setptlow)
+        result['setpthigh'] = float('%.1f' % setpthigh)
+        result['mode'] = mode
+        print json.dumps(result, indent=2)
     else:
-        setptlow = cel_to_fahr(data['shared'][serial]['target_temperature_low'])
-        setpthigh = cel_to_fahr(data['shared'][serial]['target_temperature_high'])
-        print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F - %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setptlow, setpthigh, mode)
+        if mode != 'range':
+            print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setpt, mode)
+        else:
+            print u'Temp: %.1f\N{DEGREE SIGN}F, Humidity: %d%%, Set: %.1f\N{DEGREE SIGN}F - %.1f\N{DEGREE SIGN}F, Mode: %s' % (temp, humidity, setptlow, setpthigh, mode)
