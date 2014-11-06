@@ -1,10 +1,9 @@
 Basics:
 
-Add debug arg and logging
-Handle request failure by attempting to login again (especially important if used a cached token)
-.nestrc for auth details (it's gonna be plaintext somewhere, unfortunately)
 Mode set and target set
 Handle range (auto) with two setpoints - display and set
+.nestrc for auth details (it's gonna be plaintext somewhere, unfortunately)
+Handle request failure by attempting to login again (especially important if used a cached token)
 Make OO
 
 Then the fun stuff begins:

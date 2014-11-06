@@ -13,6 +13,7 @@ urls = {'login': 'https://home.nest.com/user/login',
 tokendir = '%s/.cache/nestcontrol' % os.environ['HOME']
 tokenfile = 'token'
 tokenpath = '%s/%s' % (tokendir, tokenfile)
+debug = 0
 
 
 def cel_to_fahr(celsius):
@@ -57,15 +58,19 @@ def login(session, username, password):
         auth = json.load(authfile)
         ts = calendar.timegm(time.strptime(auth['expires'], '%a, %d-%b-%Y %H:%M:%S %Z'))
         if time.time() < ts:
+            debug1('Using token from cache')
             return auth
+        else:
+            debug1('Cached token was expired, need a new one')
 
+    debug1('Logging in')
     payload = {'username': args.username, 'password': args.password}
     r = nest_post(session, urls['login'], payload)
-    #print r.status_code
-    #print r.headers
+    debug2('http_status:', r.status_code)
+    debug3('headers:', r.headers)
 
     data = r.json()
-    #print data
+    debug3('json data:', data)
 
     auth = dict()
     auth['url'] = data['urls']['transport_url']
@@ -73,10 +78,10 @@ def login(session, username, password):
     auth['userid'] = data['userid']
     auth['expires'] = data['expires_in']
 
-    #print auth['url']
-    #print auth['token']
-    #print auth['userid']
-    #print auth['expires']
+    debug2('url:', auth['url'])
+    debug2('token:', auth['token'])
+    debug2('userid:', auth['userid'])
+    debug2('expires:', auth['expires'])
 
     path = ''
     for dir in tokendir.split('/'):
@@ -91,20 +96,41 @@ def login(session, username, password):
 
 
 def get_status(session, auth):
+    debug1('Getting status')
     r = auth_nest_get(session, auth, urls['status'])
-    #print r.status_code
-    #print r.headers
-
-    #print json.dumps(data, indent=2)
+    debug2('http_status:', r.status_code)
+    debug3('headers:', r.headers)
+    debug3('json data:', r.json())
     return r.json()
 
+
+def log(*args):
+    print ' '.join(map(str, args))
+
+
+def debug1(*args):
+    if debug >= 1:
+        log(*args)
+
+
+def debug2(*args):
+    if debug >= 2:
+        log(*args)
+
+
+def debug3(*args):
+    if debug >= 3:
+        log(*args)
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Nest thermostat controller")
     argparser.add_argument('-u', '--username', required=True, help='Nest username')
     argparser.add_argument('-p', '--password', required=True, help='Nest password')
     argparser.add_argument('-s', '--serial', help='Nest serial number (Default: first nest found)')
+    argparser.add_argument('-d', '--debug', type=int, default=0, help='Debug level. Higher is more (Default: 0)')
     args = argparser.parse_args()
+
+    debug = args.debug
 
     session = requests.Session()
 
