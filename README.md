@@ -3,6 +3,24 @@ nestcontrol
 
 A nest thermostat controller written in Python.
 
+Status
+======
+
+* Displays current temperature, humidity, setpoint, and mode
+* Caches user authentication token to ~/.cache/nestcontrol/token
+
+Usage
+=====
+
+```
+$ ./nest.py
+usage: nest.py [-h] -u USERNAME -p PASSWORD [-s SERIAL]
+nest.py: error: argument -u/--username is required
+
+$ ./nest.py -u skipper@gilligan.isle -p minnow
+Temp: 71.8°F, Humidity: 51%, Set: 71.1°F, Mode: off
+```
+
 Thanks
 ======
 
