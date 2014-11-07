@@ -158,13 +158,22 @@ def do_mode(session, auth, mode, serial):
     auth_nest_post_serial(session, auth, urls['set'], data, serial)
 
 
-def do_command(session, auth, command, serial):
-    debug1('Executing command "%s"' % command)
+def do_command_temps(session, auth, command, serial):
     if tempre.match(command):
+        debug1('Executing temp setpt command "%s"' % command)
         do_temp(session, auth, command, serial)
     elif rangere.match(command):
+        debug1('Executing temp range command "%s"' % command)
         do_range(session, auth, command, serial)
+    else:
+        pass  # Ignore everything else for now
+
+
+def do_command_modes(session, auth, command, serial):
+    if tempre.match(command) or rangere.match(command):
+        pass
     elif command in modes:
+        debug1('Executing mode command "%s"' % command)
         do_mode(session, auth, command, serial)
     else:
         log('Ignoring unknown command "%s"' % command)
@@ -196,7 +205,7 @@ if __name__ == '__main__':
     argparser.add_argument('-f', '--fulljson', action='store_true', default=False, help='Output entire status as json (Default: False).')
     argparser.add_argument('-j', '--json', action='store_true', default=False, help='Output basic info as json (Default: False).')
     argparser.add_argument('-d', '--debug', type=int, default=0, help='Debug level. Higher is more (Default: 0).')
-    argparser.add_argument('command', nargs='*', help='commands - off, heat, cool, auto, or a set temperature in Fahrenheit. For example, to turn hvac off, use the command "off", or to turn on heat and set the temperature, "heat 72", or to just set the temperature "68". For auto, specify a temperature range (such as "68-72"). Commands are executed in the order provided, and note: don\'t enter the quotes.')
+    argparser.add_argument('command', nargs='*', help='commands - off, heat, cool, auto, or a set temperature in Fahrenheit. For example, to turn hvac off, use the command "off", or to turn on heat and set the temperature, "heat 72", or to just set the temperature "68". For auto, specify a temperature range (such as "68-72"). Commands are executed in the order provided, with set points first, and note: don\'t enter the quotes.')
 
     args = argparser.parse_args()
 
@@ -215,7 +224,10 @@ if __name__ == '__main__':
         serial = args.serial
 
     for command in args.command:
-        do_command(session, auth, command, serial)
+        do_command_temps(session, auth, command, serial)
+
+    for command in args.command:
+        do_command_modes(session, auth, command, serial)
 
     # If we executed a command, update the status
     if len(args.command) > 0:

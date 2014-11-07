@@ -19,7 +19,7 @@ Usage examples:
 
 ```
 $ ./nest.py -h
-usage: nest.py [-h] -u USERNAME -p PASSWORD [-s SERIAL] [-d DEBUG]
+usage: nest.py [-h] -u USERNAME -p PASSWORD [-s SERIAL] [-f] [-j] [-d DEBUG]
                [command [command ...]]
 
 Nest thermostat controller
@@ -31,7 +31,8 @@ positional arguments:
                         temperature, "heat 72", or to just set the temperature
                         "68". For auto, specify a temperature range (such as
                         "68-72"). Commands are executed in the order provided,
-                        and note: don't enter the quotes.
+                        with set points first, and note: don't enter the
+                        quotes.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -41,22 +42,42 @@ optional arguments:
                         Nest password.
   -s SERIAL, --serial SERIAL
                         Nest serial number (Default: first nest found).
+  -f, --fulljson        Output entire status as json (Default: False).
+  -j, --json            Output basic info as json (Default: False).
   -d DEBUG, --debug DEBUG
                         Debug level. Higher is more (Default: 0).
 
 $ ./nest.py -u skipper@gilligan.isle -p minnow
-Temp: 75.9°F, Humidity: 51%, Set: 72.0°F, Mode: off                     
+Temp: 75.9°F, Humidity: 51%, Set: 72.0°F, Mode: off
 
 $ ./nest.py -u skipper@gilligan.isle -p minnow 70 heat
 Temp: 75.9°F, Humidity: 51%, Set: 70.0°F, Mode: heat
 
 $ ./nest.py -u skipper@gilligan.isle -p minnow 65-77 auto
-Temp: 75.9°F, Humidity: 51%, Set: 65.0°F - 77.0°F, Mode: range          
+Temp: 75.9°F, Humidity: 51%, Set: 65.0°F - 77.0°F, Mode: range
 
 $ ./nest.py -u skipper@gilligan.isle -p minnow 70 off
 Temp: 75.9°F, Humidity: 51%, Set: 70.0°F, Mode: off
+```
+
+Commands are processed in order, though temperature set points or ranges are processed before commands. Hence the following command sequence:
 
 ```
+$ ./nest.py [...] off 70
+```
+
+Will be processed as if the following was entered:
+
+```
+$ ./nest.py [...] 70 off
+```
+
+This is to make sure the requested temperature set point takes effect immediately.
+Otherwise, imagine if the room was 70 degrees and the thermostat was completely
+off with a set point of 74. If we provided the commands in the order of "heat 70",
+we wouldn't want the heater to immediately turn on when the system is set to
+heat (because the thermostat's current set point in 74). By adjusting the set
+point first, we avoid that possibility.
 
 Thanks
 ======
