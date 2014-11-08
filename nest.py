@@ -229,6 +229,9 @@ if __name__ == '__main__':
     for command in args.command:
         do_command_modes(session, auth, command, serial)
 
+    for command in args.command:
+        do_command_temps(session, auth, command, serial)
+
     # If we executed a command, update the status
     if len(args.command) > 0:
         data = get_status(session, auth)
